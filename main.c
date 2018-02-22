@@ -7,11 +7,12 @@
 
 int main(int argc, char **argv){
     shell_loop();
-
     return EXIT_SUCCESS;
 }
 
-
+/*
+Shell Loop is the function that lets the shell run continuously while the user write their command
+*/
 void shell_loop(void){
     char *line;
     char **args;
@@ -20,7 +21,7 @@ void shell_loop(void){
     do{
         printf("> ");
         line = read_line();
-        args = interpret_line(line);
+        args = arg_split(line);
         status = execute(args);
 
         free(line);
@@ -29,12 +30,14 @@ void shell_loop(void){
 }
 
 
-
+/*
+The read_line function takes the input from the user and allocates memory to contain the entire command
+*/
 char * read_line(void){
     int bufsize = LINE_BUFFSIZE;
     int pos = 0;
     char * buffer = malloc(sizeof(char)*bufsize);
-    int symbol;
+    int symbol;//EOF is an integer
 
     if(!buffer) {
         printf("c-shell: Allocation memory error\n");
@@ -65,32 +68,45 @@ char * read_line(void){
     
 }
 
-    char ** interpret_line(char * line){
-        int bufferSize = TOKEN_BUFFSIZE;
-        int position=0;
-        char * token;
-        char ** tokens = malloc(bufferSize * sizeof(char*));
+/*
+The arg_split function takes the line from the read_line function and tokenizes the line into different
+segments for later execution
+*/
+char ** arg_split(char * line){
+    int bufferSize = TOKEN_BUFFSIZE;
+    int position=0;
+    int c;
+    char * token;
+    char ** tokens = malloc(bufferSize * sizeof(char*));
 
-        token = strtok(line, DELIMITER);
+    token = strtok(line, DELIMITER);
 
-        if(!tokens){
-            printf("c-shell allocation error \n");
-            exit(EXIT_FAILURE);
-        }
+    if(!tokens){
+        printf("c-shell allocation error \n");
+        exit(EXIT_FAILURE);
+    }
 
-        while(token != NULL){
-            tokens[position]=token;
-            position++;
+    while(token != NULL){
+        tokens[position]=token;
+        position++;
 
-            if(position >= bufferSize){
-                bufferSize+=TOKEN_BUFFSIZE;
-                tokens = realloc(tokens,bufferSize * sizeof(char*));
+        if(position >= bufferSize){
+            bufferSize+=TOKEN_BUFFSIZE;
+            tokens = realloc(tokens,bufferSize * sizeof(char*));
+            if (!tokens){
+                printf("C-Shell: Allocation error \n");
+                exit(EXIT_FAILURE);
             }
         }
-
-    
-
-
-
-
+        token = strtok(NULL,DELIMITER); //get the pointer from the previous string execution where it left off
+        
     }
+    tokens[position] = NULL;
+    return tokens;
+}
+
+
+int arg_launch(){
+    
+}
+
