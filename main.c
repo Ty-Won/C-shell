@@ -106,7 +106,76 @@ char ** arg_split(char * line){
 }
 
 
-int arg_launch(){
-    
+int shell_launch(char **args){
+    pid_t pid, wpid;
+    int status;
+
+    pid=fork();
+        //if child
+        if(pid==0){
+            if(execvp(args[0],args)== -1){
+                perror("C-Shell");
+            }
+            exit(EXIT_FAILURE);
+        }
+        else if(pid<0){
+            perror ("C-Shell");
+        }
+        else{//Parent Process
+        do{
+            wpid = waitpid(pid, &status, WUNTRACED);
+        }while (!WIFEXITED(status)&& !WIFSIGNALED(status));
+
+        }
+        return 1;
 }
 
+int shell_cd(char ** args);
+int shell_help(char **args);
+int shell_exit(char **args);
+
+char * builtInStr[] = {
+    "cd",
+    "help",
+    "exit"
+};
+
+int (*builtin_func[]) (char **) = {
+    &shell_cd,
+    &shell_help,
+    &shell_exit
+};
+
+int shell_num_builtins(){
+    return sizeof(builtInStr)/sizeof(char *);
+}
+
+int shell_cd ( char **args){
+    if(args[1]==NULL) {
+        printf("C-Shell expected argument to \"CD\"\n");
+    }else{
+        if(chdir(args[1])!=0){
+            perror("C-shell:Not child process");
+        }
+    }
+    return 1;
+}
+
+// int shell_help(char **args){
+//     int 
+// }
+
+int shell_exit(char **args){
+    return 0;
+}
+
+int shell_execute (char **args){
+    int execIndex;
+    if(args[0]==NULL){
+        return 1;
+    }
+
+    for (execIndex=0; execIndex<shell_num_builtins();execIndex++){
+        printf("    %s\n", builtInStr[execIndex]);
+    }
+}
