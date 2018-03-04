@@ -1,14 +1,20 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <string.h>
 #define LINE_BUFFSIZE 1024
-#define EOF -1
 #define TOKEN_BUFFSIZE 64
 #define DELIMITER " \t\r\n\a"
 
-int main(int argc, char **argv){
-    shell_loop();
-    return EXIT_SUCCESS;
-}
+
+
+char * read_line(void);
+char ** arg_split(char * line);
+void shell_loop(void);
+int shell_execute (char **args);
+
+
 
 /*
 Shell Loop is the function that lets the shell run continuously while the user write their command
@@ -19,11 +25,10 @@ void shell_loop(void){
     int status;
 
     do{
-        printf("> ");
+        printf("C-Shell > ");
         line = read_line();
         args = arg_split(line);
-        status = execute(args);
-
+        status = shell_execute(args);
         free(line);
         free(args);
     } while(status);
@@ -47,11 +52,11 @@ char * read_line(void){
     while(1){ //for continuous reading
         symbol = getchar();
         if (symbol== EOF || symbol=='\n'){
-            buffer[pos]="\0";
+            buffer[pos]= (char) "\0";
             return buffer;
         }
         else{
-            buffer[pos]=symbol;
+            buffer[pos]=(char)symbol;
         }
         symbol++;
 
@@ -134,20 +139,20 @@ int shell_cd(char ** args);
 int shell_help(char **args);
 int shell_exit(char **args);
 
-char * builtInStr[] = {
+char * built_in_str[] = {
     "cd",
     "help",
     "exit"
 };
 
-int (*builtin_func[]) (char **) = {
+int (*built_in_func[]) (char **) = {
     &shell_cd,
     &shell_help,
     &shell_exit
 };
 
 int shell_num_builtins(){
-    return sizeof(builtInStr)/sizeof(char *);
+    return sizeof(built_in_str)/sizeof(char *);
 }
 
 int shell_cd ( char **args){
@@ -172,10 +177,20 @@ int shell_exit(char **args){
 int shell_execute (char **args){
     int execIndex;
     if(args[0]==NULL){
+        printf("Null Input");
         return 1;
     }
 
     for (execIndex=0; execIndex<shell_num_builtins();execIndex++){
-        printf("    %s\n", builtInStr[execIndex]);
+        if (strcmp(args[0],built_in_str[execIndex]==0)){
+            return (*built_in_func[execIndex])(args);
+        }   
     }
+    return shell_launch(args);
 }
+
+int main(int argc, char **argv){
+    shell_loop();
+    return EXIT_SUCCESS;
+}
+
