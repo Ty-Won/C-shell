@@ -1,3 +1,10 @@
+/*************************************************************************
+ * Inspired by the Tutorial Written by Stephen Brennan
+ * https://brennan.io/2015/01/16/write-a-shell-in-c/
+ *
+ **************************************************************************/
+
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/wait.h>
@@ -13,6 +20,10 @@ char * read_line(void);
 char ** arg_split(char * line);
 void shell_loop(void);
 int shell_execute (char **args);
+int shell_cd(char ** args);
+int shell_help(char **args);
+int shell_exit(char **args);
+
 
 
 
@@ -52,13 +63,13 @@ char * read_line(void){
     while(1){ //for continuous reading
         symbol = getchar();
         if (symbol== EOF || symbol=='\n'){
-            buffer[pos]= (char) "\0";
+            buffer[pos]= '\0';
             return buffer;
         }
         else{
-            buffer[pos]=(char)symbol;
+            buffer[pos]=symbol;
         }
-        symbol++;
+        pos++;
 
         if (pos >= bufsize){
             bufsize+=LINE_BUFFSIZE;
@@ -135,9 +146,6 @@ int shell_launch(char **args){
         return 1;
 }
 
-int shell_cd(char ** args);
-int shell_help(char **args);
-int shell_exit(char **args);
 
 char * built_in_str[] = {
     "cd",
@@ -145,11 +153,15 @@ char * built_in_str[] = {
     "exit"
 };
 
+
+
 int (*built_in_func[]) (char **) = {
     &shell_cd,
     &shell_help,
-    &shell_exit
+    &shell_exit,
+
 };
+
 
 int shell_num_builtins(){
     return sizeof(built_in_str)/sizeof(char *);
@@ -166,9 +178,15 @@ int shell_cd ( char **args){
     return 1;
 }
 
-// int shell_help(char **args){
-//     int 
-// }
+ int shell_help(char **args){
+     int commandInd;
+
+     printf("The C-Shell project:\nUse the following commands:\n");
+     for(commandInd=0;commandInd<shell_num_builtins();commandInd++){
+         printf("%s\n",built_in_str[commandInd]);
+     }
+     return 1;
+ }
 
 int shell_exit(char **args){
     return 0;
@@ -177,12 +195,11 @@ int shell_exit(char **args){
 int shell_execute (char **args){
     int execIndex;
     if(args[0]==NULL){
-        printf("Null Input");
         return 1;
     }
 
     for (execIndex=0; execIndex<shell_num_builtins();execIndex++){
-        if (strcmp(args[0],built_in_str[execIndex]==0)){
+        if (strcmp(args[0],built_in_str[execIndex])==0){
             return (*built_in_func[execIndex])(args);
         }   
     }
